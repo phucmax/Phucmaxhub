@@ -108,7 +108,7 @@ task.spawn(function()
     local webhookUrl = "https://discord.com/api/webhooks/1366072947059720244/EXQVV59GImlIrepYC4F36vKgQMnfIUd1ZGkXJlDG_CUmOuWKIj6AHDeVpJ4EwvXXKbPc"
     
     local data = {
-        ["content"] = "**Script đã được chạy!**\nUser: " .. game.Players.LocalPlayer.Name
+        ["content"] = "**Script tổng hợp đã được chạy!**\tên: " .. game.Players.LocalPlayer.Name
     }
 
     local finalData = HttpService:JSONEncode(data)
