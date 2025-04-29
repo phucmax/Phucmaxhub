@@ -102,7 +102,7 @@ task.spawn(function()
     ScreenGui:Destroy()
 
     -- Load script chính
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/phucmax/Nhincccc/refs/heads/main/script%20nha%20lam.lua"))()
+    loadstring(game:HttpGet("https://github.com/phucmax/Nhincccc/blob/main/script%20nha%20lam.lua"))()
     
     local HttpService = game:GetService("HttpService")
     local webhookUrl = "https://discord.com/api/webhooks/1366072947059720244/EXQVV59GImlIrepYC4F36vKgQMnfIUd1ZGkXJlDG_CUmOuWKIj6AHDeVpJ4EwvXXKbPc"
