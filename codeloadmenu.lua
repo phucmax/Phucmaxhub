@@ -108,22 +108,20 @@ ScreenGui.Name = "VietnamAnniversary"
 local lines = {
     "30/4/1975 - 30/4/2025",
     "          ",
-    "50 năm giải phóng",
+    "50 năm giải phóng miền nam ",
     "           ",
     "Việt Nam muôn năm",
     "          ",
     "Cali khác nước",
     "              ",
     "húc có cái cổng mà cay đến giờ",
-    "dịch mẹ chúng mày bọn cali oclon",
-            " ",
-            " ",
+    
 }
 
 for i, text in ipairs(lines) do
     local label = Instance.new("TextLabel")
     label.Parent = ScreenGui
-    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Size = UDim2.new(1, 0, 0, 20)
     label.Position = UDim2.new(0, 0, 0.3 + (i * 0.05), 0)
     label.BackgroundTransparency = 1
     label.Text = text
@@ -140,7 +138,7 @@ for i, text in ipairs(lines) do
 end
 
 -- Chờ 1.5 giây sau khi dòng cuối hiện ra
-task.wait(2)
+task.wait(1.5)
 
 -- Mờ dần tất cả dòng
 for i, label in ipairs(ScreenGui:GetChildren()) do
