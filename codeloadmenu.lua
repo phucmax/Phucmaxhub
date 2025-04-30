@@ -114,7 +114,10 @@ local lines = {
     "          ",
     "Cali khác nước",
     "              ",
-    "húc có cái cổng mà cay đến giờ"
+    "húc có cái cổng mà cay đến giờ",
+    "dịch mẹ chúng mày bọn cali oclon",
+            " ",
+            " ",
 }
 
 for i, text in ipairs(lines) do
@@ -137,7 +140,7 @@ for i, text in ipairs(lines) do
 end
 
 -- Chờ 1.5 giây sau khi dòng cuối hiện ra
-task.wait(2.5)
+task.wait(2)
 
 -- Mờ dần tất cả dòng
 for i, label in ipairs(ScreenGui:GetChildren()) do
