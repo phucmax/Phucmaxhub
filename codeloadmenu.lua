@@ -139,7 +139,7 @@ for i, text in ipairs(lines) do
 end
 
 -- Chờ 1.5 giây sau khi dòng cuối hiện ra
-task.wait(1.5)
+task.wait(0.5)
 
 -- Mờ dần tất cả dòng
 for i, label in ipairs(ScreenGui:GetChildren()) do
