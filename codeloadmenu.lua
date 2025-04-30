@@ -114,14 +114,15 @@ local lines = {
     "          ",
     "Cali khác nước",
     "              ",
-    "húc có cái cổng mà cay đến giờ"
-    
+    "húc có cái cổng mà cay đến giờ",
+    " ",
+            " Cali con cặc"
 }
 
 for i, text in ipairs(lines) do
     local label = Instance.new("TextLabel")
     label.Parent = ScreenGui
-    label.Size = UDim2.new(2, 0, 0, 20)
+    label.Size = UDim2.new(3, 0, 0, 20)
     label.Position = UDim2.new(0, 0, 0.3 + (i * 0.05), 0)
     label.BackgroundTransparency = 1
     label.Text = text
