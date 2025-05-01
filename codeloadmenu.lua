@@ -1,14 +1,14 @@
---// UI Loading Screen với Logo + chữ "phucmaxtonghop" dưới logo
+
 
 local ScreenGui = Instance.new("ScreenGui")
 local LoadingFrame = Instance.new("Frame")
 local Logo = Instance.new("ImageLabel")
-local LogoText = Instance.new("TextLabel") -- thêm dòng chữ dưới logo
+local LogoText = Instance.new("TextLabel") 
 local Title = Instance.new("TextLabel")
 local ProgressBarBackground = Instance.new("Frame")
 local ProgressBar = Instance.new("Frame")
 
--- Parent vào CoreGui
+
 pcall(function()
     ScreenGui.Parent = game:GetService("CoreGui")
 end)
@@ -20,7 +20,7 @@ ScreenGui.IgnoreGuiInset = true
 LoadingFrame.Parent = ScreenGui
 LoadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 LoadingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-LoadingFrame.Size = UDim2.new(0, 300, 0, 240)
+LoadingFrame.Size = UDim2.new(0, 300, 0, 180)
 LoadingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 LoadingFrame.BorderSizePixel = 0
 LoadingFrame.BackgroundTransparency = 0.1
@@ -106,16 +106,8 @@ local ScreenGui = Instance.new("ScreenGui", PlayerGui)
 ScreenGui.Name = "VietnamAnniversary"
 
 local lines = {
-    "30/4/1975 - 30/4/2025",
-    "          ",
-    "50 năm giải phóng miền nam ",
-    "           ",
-    "Việt Nam muôn năm",
-    "          ",
-    "Cali khác nước",
-    "              ",
-    "húc có cái cổng mà cay đến giờ",
-    " ",
+    "Việt Nam muôn năm ",
+    " "
             " Cali con cặc"
 }
 
