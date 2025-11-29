@@ -1,3 +1,4 @@
+
 -- LocalScript (đặt vào StarterPlayerScripts)
 -- Chú ý: client-side teleport có thể bị server chặn trong một số game.
 -- Thay đổi config dưới đây nếu cần.
@@ -131,7 +132,7 @@ local function getTargetFeetPosition(targetCharacter)
 		return pos + Vector3.new(0, 0.5, 0)
 	else
 		-- fallback: a bit below HRP
-		return hrp.Position - Vector3.new(0, (hrp.Size.Y / 2) + 1.8, 0)
+		return hrp.Position - Vector3.new(0, (hrp.Size.Y / 5) + 1.8, 0)
 	end
 end
 
