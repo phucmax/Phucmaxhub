@@ -1,14 +1,17 @@
+
 --================ CONFIG =================--
 local UI_BG_IMAGE = "rbxassetid://87746599009295"      -- Ảnh nền UI
-local TOGGLE_BG_IMAGE = "rbxassetid://102837028306912"  -- Ảnh nút tròn
+local TOGGLE_BG_IMAGE = "rbxassetid://87746599009295"  -- Ảnh nút tròn
 local UI_TITLE = "AUTO FARM PHUCMAX"
 
 --================ SERVICES =================--
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local player = Players.LocalPlayer
+local LocalPlayer = player
 
 --================ GUI =================--
 local ScreenGui = Instance.new("ScreenGui")
@@ -71,11 +74,12 @@ local Layout = Instance.new("UIListLayout", Holder)
 Layout.Padding = UDim.new(0,10)
 
 --================ TOGGLE BUTTON FUNCTION =================--
-local function CreateToggle(name)
+-- Sửa: CreateToggle nhận (name, callback). Callback(state) sẽ được gọi khi toggle thay đổi.
+local function CreateToggle(name, callback)
 	local Button = Instance.new("TextButton")
 	Button.Parent = Holder
 	Button.Size = UDim2.new(1,0,0,45)
-	Button.BackgroundColor3 = Color3.fromRGB(255,50,255)
+	Button.BackgroundColor3 = Color3.fromRGB(40,40,40) -- default OFF color
 	Button.Text = name .. " : OFF"
 	Button.Font = Enum.Font.Gotham
 	Button.TextScaled = true
@@ -86,8 +90,8 @@ local function CreateToggle(name)
 	Corner.CornerRadius = UDim.new(0,12)
 
 	local state = false
-	Button.MouseButton1Click:Connect(function()
-		state = not state
+	local function update(s)
+		state = s
 		if state then
 			Button.Text = name .. " : ON"
 			Button.BackgroundColor3 = Color3.fromRGB(0,170,0)
@@ -95,12 +99,24 @@ local function CreateToggle(name)
 			Button.Text = name .. " : OFF"
 			Button.BackgroundColor3 = Color3.fromRGB(40,40,40)
 		end
+		if callback then
+			-- bảo vệ callback để tránh lỗi runtime
+			local ok, err = pcall(callback, state)
+			if not ok then
+				warn("CreateToggle callback error for", name, err)
+			end
+		end
+	end
+
+	Button.MouseButton1Click:Connect(function()
+		update(not state)
 	end)
+
+	-- trả về hàm lấy trạng thái nếu cần
+	return Button, function() return state end
 end
 
---================ CREATE BUTTONS =================--
-local VirtualInputManager = game:GetService("VirtualInputManager")
-
+--================ AUTO SKILL =================--
 local auto1234 = false
 
 CreateToggle("Auto Skill", function(state)
@@ -116,383 +132,341 @@ task.spawn(function()
 				Enum.KeyCode.Three,
 				Enum.KeyCode.Four
 			}) do
-				VirtualInputManager:SendKeyEvent(true, key, false, game)
-				task.wait(0.05)
-				VirtualInputManager:SendKeyEvent(false, key, false, game)
+				-- Lưu ý: VirtualInputManager có thể bị hạn chế ở môi trường an toàn.
+				pcall(function()
+					VirtualInputManager:SendKeyEvent(true, key, false, game)
+					task.wait(0.05)
+					VirtualInputManager:SendKeyEvent(false, key, false, game)
+				end)
 				task.wait(0.1)
 			end
 		end
 	end
 end)
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+--================ Underfoot TP (scope riêng) =================--
+do
+	local followEnabled_under = false
+	local targetPlayer_under = nil
+	local followConnection_under
 
-local followEnabled = false
-local targetPlayer = nil
-local followConnection
-
--- tìm player hợp lệ (không phải mình, còn sống)
-local function getNewTarget()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer
-			and plr.Character
-			and plr.Character:FindFirstChild("Humanoid")
-			and plr.Character.Humanoid.Health > 0 then
-			return plr
+	local function getNewTarget_under()
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer
+				and plr.Character
+				and plr.Character:FindFirstChild("Humanoid")
+				and plr.Character.Humanoid.Health > 0 then
+				return plr
+			end
 		end
+		return nil
 	end
-	return nil
-end
 
-CreateToggle("Underfoot TP",
-	function(state)
-		followEnabled = state
+	CreateToggle("Underfoot TP", function(state)
+		followEnabled_under = state
 
 		if not state then
-			if followConnection then
-				followConnection:Disconnect()
-				followConnection = nil
+			if followConnection_under then
+				followConnection_under:Disconnect()
+				followConnection_under = nil
 			end
-			targetPlayer = nil
+			targetPlayer_under = nil
 			return
 		end
 
-		targetPlayer = getNewTarget()
+		targetPlayer_under = getNewTarget_under()
 
-		followConnection = RunService.Heartbeat:Connect(function()
-			if not followEnabled then return end
+		followConnection_under = RunService.Heartbeat:Connect(function()
+			if not followEnabled_under then return end
 
 			local myChar = LocalPlayer.Character
 			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-			-- đổi mục tiêu nếu cần
-			if not targetPlayer
-				or not targetPlayer.Character
-				or not targetPlayer.Character:FindFirstChild("Humanoid")
-				or targetPlayer.Character.Humanoid.Health <= 0 then
-				targetPlayer = getNewTarget()
+			if not targetPlayer_under
+				or not targetPlayer_under.Character
+				or not targetPlayer_under.Character:FindFirstChild("Humanoid")
+				or targetPlayer_under.Character.Humanoid.Health <= 0 then
+				targetPlayer_under = getNewTarget_under()
 				return
 			end
 
-			local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local targetHRP = targetPlayer_under.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			-- vị trí dưới chân mục tiêu (2 studs)
 			local pos = targetHRP.Position - Vector3.new(0, 2, 0)
-
-			-- luôn hướng mặt về mục tiêu
 			myHRP.CFrame = CFrame.new(pos, targetHRP.Position)
 		end)
 	end)
-	
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-local followEnabled = false
-local targetPlayer = nil
-local followConnection
-
--- tìm mục tiêu hợp lệ
-local function getNewTarget()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer
-			and plr.Character
-			and plr.Character:FindFirstChild("Humanoid")
-			and plr.Character.Humanoid.Health > 0 then
-			return plr
-		end
-	end
-	return nil
 end
 
-CreateToggle(
-	"Backstep TP",
-	function(state)
-		followEnabled = state
+--================ Backstep TP (scope riêng) =================--
+do
+	local followEnabled_back = false
+	local targetPlayer_back = nil
+	local followConnection_back
+
+	local function getNewTarget_back()
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer
+				and plr.Character
+				and plr.Character:FindFirstChild("Humanoid")
+				and plr.Character.Humanoid.Health > 0 then
+				return plr
+			end
+		end
+		return nil
+	end
+
+	CreateToggle("Backstep TP", function(state)
+		followEnabled_back = state
 
 		if not state then
-			if followConnection then
-				followConnection:Disconnect()
-				followConnection = nil
+			if followConnection_back then
+				followConnection_back:Disconnect()
+				followConnection_back = nil
 			end
-			targetPlayer = nil
+			targetPlayer_back = nil
 			return
 		end
 
-		targetPlayer = getNewTarget()
+		targetPlayer_back = getNewTarget_back()
 
-		followConnection = RunService.Heartbeat:Connect(function()
-			if not followEnabled then return end
+		followConnection_back = RunService.Heartbeat:Connect(function()
+			if not followEnabled_back then return end
 
 			local myChar = LocalPlayer.Character
 			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-			-- đổi mục tiêu nếu chết / mất
-			if not targetPlayer
-				or not targetPlayer.Character
-				or not targetPlayer.Character:FindFirstChild("Humanoid")
-				or targetPlayer.Character.Humanoid.Health <= 0 then
-				targetPlayer = getNewTarget()
+			if not targetPlayer_back
+				or not targetPlayer_back.Character
+				or not targetPlayer_back.Character:FindFirstChild("Humanoid")
+				or targetPlayer_back.Character.Humanoid.Health <= 0 then
+				targetPlayer_back = getNewTarget_back()
 				return
 			end
 
-			local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local targetHRP = targetPlayer_back.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			-- SAU LƯNG MỤC TIÊU (theo LookVector)
-			local behindPos =
-				targetHRP.Position
-				- targetHRP.CFrame.LookVector * 2
-
-			-- teleport + luôn nhìn vào mục tiêu
+			local behindPos = targetHRP.Position - targetHRP.CFrame.LookVector * 2
 			myHRP.CFrame = CFrame.new(behindPos, targetHRP.Position)
 		end)
 	end)
-	
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-local followEnabled = false
-local targetPlayer = nil
-local followConnection
-
--- tìm player hợp lệ
-local function getNewTarget()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer
-			and plr.Character
-			and plr.Character:FindFirstChild("Humanoid")
-			and plr.Character.Humanoid.Health > 0 then
-			return plr
-		end
-	end
-	return nil
 end
 
-CreateToggle(
-	" Overhead TP",
-	function(state)
-		followEnabled = state
+--================ Overhead TP (scope riêng) =================--
+do
+	local followEnabled_over = false
+	local targetPlayer_over = nil
+	local followConnection_over
+
+	local function getNewTarget_over()
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer
+				and plr.Character
+				and plr.Character:FindFirstChild("Humanoid")
+				and plr.Character.Humanoid.Health > 0 then
+				return plr
+			end
+		end
+		return nil
+	end
+
+	CreateToggle("Overhead TP", function(state)
+		followEnabled_over = state
 
 		if not state then
-			if followConnection then
-				followConnection:Disconnect()
-				followConnection = nil
+			if followConnection_over then
+				followConnection_over:Disconnect()
+				followConnection_over = nil
 			end
-			targetPlayer = nil
+			targetPlayer_over = nil
 			return
 		end
 
-		targetPlayer = getNewTarget()
+		targetPlayer_over = getNewTarget_over()
 
-		followConnection = RunService.Heartbeat:Connect(function()
-			if not followEnabled then return end
+		followConnection_over = RunService.Heartbeat:Connect(function()
+			if not followEnabled_over then return end
 
 			local myChar = LocalPlayer.Character
 			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-			-- đổi mục tiêu khi chết / mất
-			if not targetPlayer
-				or not targetPlayer.Character
-				or not targetPlayer.Character:FindFirstChild("Humanoid")
-				or targetPlayer.Character.Humanoid.Health <= 0 then
-				targetPlayer = getNewTarget()
+			if not targetPlayer_over
+				or not targetPlayer_over.Character
+				or not targetPlayer_over.Character:FindFirstChild("Humanoid")
+				or targetPlayer_over.Character.Humanoid.Health <= 0 then
+				targetPlayer_over = getNewTarget_over()
 				return
 			end
 
-			local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local targetHRP = targetPlayer_over.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			-- TRÊN ĐẦU MỤC TIÊU
-			local abovePos =
-				targetHRP.Position
-				+ Vector3.new(0, 3, 0)
-
-			-- teleport + luôn nhìn xuống mục tiêu
+			local abovePos = targetHRP.Position + Vector3.new(0, 3, 0)
 			myHRP.CFrame = CFrame.new(abovePos, targetHRP.Position)
 		end)
 	end)
-	
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-local orbitEnabled = false
-local targetPlayer = nil
-local orbitConnection
-local angle = 0
-
--- tìm mục tiêu hợp lệ
-local function getNewTarget()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer
-			and plr.Character
-			and plr.Character:FindFirstChild("Humanoid")
-			and plr.Character.Humanoid.Health > 0 then
-			return plr
-		end
-	end
-	return nil
 end
 
-CreateToggle(
-	"Orbit TP",
-	function(state)
-		orbitEnabled = state
+--================ Orbit TP (scope riêng) =================--
+do
+	local orbitEnabled_orb = false
+	local targetPlayer_orb = nil
+	local orbitConnection_orb
+	local angle_orb = 0
+
+	local function getNewTarget_orb()
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer
+				and plr.Character
+				and plr.Character:FindFirstChild("Humanoid")
+				and plr.Character.Humanoid.Health > 0 then
+				return plr
+			end
+		end
+		return nil
+	end
+
+	CreateToggle("Orbit TP", function(state)
+		orbitEnabled_orb = state
 
 		if not state then
-			if orbitConnection then
-				orbitConnection:Disconnect()
-				orbitConnection = nil
+			if orbitConnection_orb then
+				orbitConnection_orb:Disconnect()
+				orbitConnection_orb = nil
 			end
-			targetPlayer = nil
+			targetPlayer_orb = nil
 			return
 		end
 
-		targetPlayer = getNewTarget()
-		angle = 0
+		targetPlayer_orb = getNewTarget_orb()
+		angle_orb = 0
 
-		orbitConnection = RunService.Heartbeat:Connect(function(dt)
-			if not orbitEnabled then return end
+		orbitConnection_orb = RunService.Heartbeat:Connect(function(dt)
+			if not orbitEnabled_orb then return end
 
 			local myChar = LocalPlayer.Character
 			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-			-- đổi mục tiêu nếu chết / mất
-			if not targetPlayer
-				or not targetPlayer.Character
-				or not targetPlayer.Character:FindFirstChild("Humanoid")
-				or targetPlayer.Character.Humanoid.Health <= 0 then
-				targetPlayer = getNewTarget()
+			if not targetPlayer_orb
+				or not targetPlayer_orb.Character
+				or not targetPlayer_orb.Character:FindFirstChild("Humanoid")
+				or targetPlayer_orb.Character.Humanoid.Health <= 0 then
+				targetPlayer_orb = getNewTarget_orb()
 				return
 			end
 
-			local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local targetHRP = targetPlayer_orb.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			-- tốc độ xoay
-			angle += dt * 2  -- tăng = xoay nhanh hơn
+			angle_orb += dt * 2
 
-			local radius = 4     -- khoảng cách vòng
-			local height = 0.5 -- cao hơn mặt đất
+			local radius = 4
+			local height = 0.5
 
-			-- tính vị trí xoay vòng
 			local offset = Vector3.new(
-				math.cos(angle) * radius,
+				math.cos(angle_orb) * radius,
 				height,
-				math.sin(angle) * radius
+				math.sin(angle_orb) * radius
 			)
 
 			local orbitPos = targetHRP.Position + offset
-
-			-- teleport + luôn nhìn mặt mục tiêu
 			myHRP.CFrame = CFrame.new(orbitPos, targetHRP.Position)
 		end)
 	end)
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-local orbitEnabled = false
-local targetPlayer = nil
-local orbitConnection
-local noclipConnection
-local angle = 0
-
--- tìm mục tiêu hợp lệ
-local function getNewTarget()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer
-			and plr.Character
-			and plr.Character:FindFirstChild("Humanoid")
-			and plr.Character.Humanoid.Health > 0 then
-			return plr
-		end
-	end
-	return nil
 end
 
--- bật noclip
-local function enableNoclip()
-	noclipConnection = RunService.Stepped:Connect(function()
-		local char = LocalPlayer.Character
-		if not char then return end
-		for _, part in ipairs(char:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = false
+--================ Heal TP (lớn / cao / noclip) =================--
+do
+	local healEnabled = false
+	local targetPlayer_heal = nil
+	local healConnection = nil
+	local noclipConnection = nil
+	local angle_heal = 0
+
+	local function getNewTarget_heal()
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer
+				and plr.Character
+				and plr.Character:FindFirstChild("Humanoid")
+				and plr.Character.Humanoid.Health > 0 then
+				return plr
 			end
 		end
-	end)
-end
-
--- tắt noclip
-local function disableNoclip()
-	if noclipConnection then
-		noclipConnection:Disconnect()
-		noclipConnection = nil
+		return nil
 	end
-end
 
-CreateToggle(
-	"heal TP",
-	function(state)
-		orbitEnabled = state
+	local function enableNoclip_heal()
+		if noclipConnection then return end
+		noclipConnection = RunService.Stepped:Connect(function()
+			local char = LocalPlayer.Character
+			if not char then return end
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
+		end)
+	end
+
+	local function disableNoclip_heal()
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+	end
+
+	CreateToggle("heal TP", function(state)
+		healEnabled = state
 
 		if not state then
-			if orbitConnection then
-				orbitConnection:Disconnect()
-				orbitConnection = nil
+			if healConnection then
+				healConnection:Disconnect()
+				healConnection = nil
 			end
-			disableNoclip()
-			targetPlayer = nil
+			disableNoclip_heal()
+			targetPlayer_heal = nil
 			return
 		end
 
-		targetPlayer = getNewTarget()
-		angle = 0
-		enableNoclip()
+		targetPlayer_heal = getNewTarget_heal()
+		angle_heal = 0
+		enableNoclip_heal()
 
-		orbitConnection = RunService.Heartbeat:Connect(function(dt)
-			if not orbitEnabled then return end
+		healConnection = RunService.Heartbeat:Connect(function(dt)
+			if not healEnabled then return end
 
 			local myChar = LocalPlayer.Character
 			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 
-			-- đổi mục tiêu khi chết / mất
-			if not targetPlayer
-				or not targetPlayer.Character
-				or not targetPlayer.Character:FindFirstChild("Humanoid")
-				or targetPlayer.Character.Humanoid.Health <= 0 then
-				targetPlayer = getNewTarget()
+			if not targetPlayer_heal
+				or not targetPlayer_heal.Character
+				or not targetPlayer_heal.Character:FindFirstChild("Humanoid")
+				or targetPlayer_heal.Character.Humanoid.Health <= 0 then
+				targetPlayer_heal = getNewTarget_heal()
 				return
 			end
 
-			local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			local targetHRP = targetPlayer_heal.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			-- tốc độ xoay
-			angle += dt * 50
+			angle_heal += dt * 50
 
-			local radius = 500   -- khoảng cách xoay
-			local height = 50  -- độ cao
+			local radius = 500
+			local height = 50
 
 			local offset = Vector3.new(
-				math.cos(angle) * radius,
+				math.cos(angle_heal) * radius,
 				height,
-				math.sin(angle) * radius
+				math.sin(angle_heal) * radius
 			)
 
 			local orbitPos = targetHRP.Position + offset
-
-			-- teleport + luôn nhìn mặt mục tiêu
 			myHRP.CFrame = CFrame.new(orbitPos, targetHRP.Position)
 		end)
 	end)
+end
 
 --================ TOGGLE UI =================--
 ToggleBtn.MouseButton1Click:Connect(function()
@@ -532,4 +506,4 @@ do
 			dragging = false
 		end
 	end)
-end 
+end
