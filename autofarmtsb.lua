@@ -1,7 +1,7 @@
 
 --================ CONFIG =================--
 local UI_BG_IMAGE = "rbxassetid://87746599009295"      -- Ảnh nền UI
-local TOGGLE_BG_IMAGE = "rbxassetid://87746599009295"  -- Ảnh nút tròn
+local TOGGLE_BG_IMAGE = "rbxassetid://102837028306912"  -- Ảnh nút tròn
 local UI_TITLE = "AUTO FARM PHUCMAX"
 
 --================ SERVICES =================--
@@ -360,7 +360,7 @@ do
 			local targetHRP = targetPlayer_orb.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			angle_orb += dt * 5
+			angle_orb += dt * 3.5
 
 			local radius = 15
 			local height = 0.5
