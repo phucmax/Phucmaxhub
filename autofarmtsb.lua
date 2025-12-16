@@ -1,7 +1,7 @@
 
 --================ CONFIG =================--
 local UI_BG_IMAGE = "rbxassetid://87746599009295"      -- Ảnh nền UI
-local TOGGLE_BG_IMAGE = "rbxassetid://102837028306912"  -- Ảnh nút tròn
+local TOGGLE_BG_IMAGE = "rbxassetid://87746599009295"  -- Ảnh nút tròn
 local UI_TITLE = "AUTO FARM PHUCMAX"
 
 --================ SERVICES =================--
@@ -248,7 +248,7 @@ do
 			local targetHRP = targetPlayer_back.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			local behindPos = targetHRP.Position - targetHRP.CFrame.LookVector * 5
+			local behindPos = targetHRP.Position - targetHRP.CFrame.LookVector * 4
 			myHRP.CFrame = CFrame.new(behindPos, targetHRP.Position)
 		end)
 	end)
@@ -303,7 +303,7 @@ do
 			local targetHRP = targetPlayer_over.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			local abovePos = targetHRP.Position + Vector3.new(0, 5, 0)
+			local abovePos = targetHRP.Position + Vector3.new(0, 3.7, 0)
 			myHRP.CFrame = CFrame.new(abovePos, targetHRP.Position)
 		end)
 	end)
@@ -360,7 +360,7 @@ do
 			local targetHRP = targetPlayer_orb.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			angle_orb += dt * 3.5
+			angle_orb += dt * 2.5
 
 			local radius = 15
 			local height = 0.5
