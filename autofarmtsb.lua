@@ -248,7 +248,7 @@ do
 			local targetHRP = targetPlayer_back.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			local behindPos = targetHRP.Position - targetHRP.CFrame.LookVector * 2
+			local behindPos = targetHRP.Position - targetHRP.CFrame.LookVector * 5
 			myHRP.CFrame = CFrame.new(behindPos, targetHRP.Position)
 		end)
 	end)
@@ -303,7 +303,7 @@ do
 			local targetHRP = targetPlayer_over.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			local abovePos = targetHRP.Position + Vector3.new(0, 3, 0)
+			local abovePos = targetHRP.Position + Vector3.new(0, 5, 0)
 			myHRP.CFrame = CFrame.new(abovePos, targetHRP.Position)
 		end)
 	end)
@@ -360,9 +360,9 @@ do
 			local targetHRP = targetPlayer_orb.Character:FindFirstChild("HumanoidRootPart")
 			if not (myHRP and targetHRP) then return end
 
-			angle_orb += dt * 2
+			angle_orb += dt * 5
 
-			local radius = 4
+			local radius = 15
 			local height = 0.5
 
 			local offset = Vector3.new(
